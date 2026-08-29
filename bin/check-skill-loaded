@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# 首次调用 Ardot 画布工具时提醒一句：先把规则加载了再动手。
+#
+# 挂在 PreToolUse 上，matcher 覆盖两种形态：
+#   CLI 直连：mcp__ardot-desktop__* 等限定名
+#   Qoder 桌面端 lazy-load：所有 MCP 调用的 hook 侧 tool_name 都是元工具 mcp_call，
+#   真实工具名（含 ardot 的限定名）在 tool_input.toolName 里（2026-08-29 实测），
+#   matcher 无法区分 —— 由下方脚本读 stdin 自检，不含 ardot 就静默退出。
+#
+# 为什么需要它：MCP 在插件启用时就连上了，21 个工具从第一回合就可见；
+# 而 skill 要靠 description 关键词命中才加载。两者不同步时会出现
+# 「工具在手边、规则没加载」——模型可能直接上手 batch_edit 而不知道
+# 每批 ≤25 op、分层验证、先结构后内容再样式这些硬约束。
+#
+# 每个会话只提示一次（用 session_id 做标记），避免每次工具调用都刷屏。
+#
+# ⚠️ 输出必须是 JSON。宿主把 command hook 的 stdout 当 JSON 解析，
+# 打纯文本会触发 "Stdout pollution" 解析错误，整条提示就丢了。
+
+set -uo pipefail
+
+INPUT="$(cat 2>/dev/null)"
+
+# 内容自检：stdin 里（tool_name 或 tool_input）不含 ardot 就不是画布调用，
+# 静默退出 —— matcher 放行了所有 mcp_call，非 ardot 的 MCP 调用都从这里滤掉。
+printf '%s' "$INPUT" | grep -q 'ardot' || exit 0
+
+# 从 hook 的 stdin JSON 里取 session_id。
+# 不依赖 jq —— 它不一定装了。
+SID="$(printf '%s' "$INPUT" \
+  | grep -o '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' \
+  | head -1 \
+  | sed 's/.*"\([^"]*\)"$/\1/')"
+
+if [ -z "$SID" ]; then
+  # 拿不到 session_id（宿主没给或格式变了）就按 5 分钟一轮退化，
+  # 保证最多每 5 分钟提示一次，不会每次调用都刷屏。
+  SID="fallback-$(( $(date +%s) / 300 ))"
+fi
+
+# 临时目录按优先级探测：Git Bash 用 TMPDIR，Windows 原生环境用 TEMP/TMP。
+# hook 的执行环境不保证是 bash，别只认 TMPDIR。
+TMPROOT="${TMPDIR:-${TEMP:-${TMP:-/tmp}}}"
+
+# ⚠️ Windows 上 TEMP/TMP 给的是 C:\Users\... 这种反斜杠路径。
+# shell 自己的重定向和 [ -e ] 能解析它，但 rm 这类外部二进制把反斜杠当字面字符，
+# 会「静默删不掉」。统一转成 POSIX 形式，让两个脚本对标记路径的看法一致。
+case "$TMPROOT" in
+  ?:\\*) TMPROOT="/$(printf '%s' "${TMPROOT%%:*}" | tr 'A-Z' 'a-z')$(printf '%s' "${TMPROOT#?:}" | tr '\\' '/')" ;;
+esac
+
+MARKER="${TMPROOT}/.ardot-skill-hint-${SID}"
+
+[ -e "$MARKER" ] && exit 0
+: >"$MARKER" 2>/dev/null || true
+
+MSG='⚠️ 正在调用 Ardot 画布工具。若本会话尚未加载 ardot-design-core（连同匹配的领域技能），请先加载再继续 —— 否则会违反这些硬规则：每批 ≤25 op、分层验证 T1–T5、构建顺序「结构 → 内容 → 样式」。已加载则忽略本条。'
+
+printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"%s"}}\n' "$MSG"
+
+exit 0

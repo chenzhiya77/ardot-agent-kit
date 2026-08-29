@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# 在浏览器里打开 Ardot 画布。
+#
+# 插件启用后 bin/ 会加入 PATH，可直接敲：
+#   open-canvas                      # 打开当前活跃文件
+#   open-canvas 719793184410961      # 打开指定文件
+#   open-canvas https://ardot.tencent.com/file/719793184410961
+#
+# 为什么需要它：外部 agent 没有内嵌画布面板。Ardot 支持多人实时协作，
+# 所以浏览器里的画布会随 agent 的编辑实时刷新 —— 这就是你的"眼睛"。
+
+set -uo pipefail
+
+PRIMARY_PORT=50501
+FALLBACK_PORT=50551
+
+probe() {
+  curl -s -m 2 "http://127.0.0.1:$1/api/v1/health" 2>/dev/null | grep -q 'ardot\|"status"[[:space:]]*:[[:space:]]*"ok"\|"version"'
+}
+
+PORT=""
+if probe "$PRIMARY_PORT"; then
+  PORT="$PRIMARY_PORT"
+elif probe "$FALLBACK_PORT"; then
+  PORT="$FALLBACK_PORT"
+fi
+
+if [ -z "$PORT" ]; then
+  echo "ardot: 未检测到画布服务。" >&2
+  echo "  请启动 Ardot 客户端并打开设计文件（端口 $PRIMARY_PORT），" >&2
+  echo "  或启动 WorkBuddy 并打开设计文件（端口 $FALLBACK_PORT）。" >&2
+  exit 1
+fi
+
+FILE_ID="${1:-}"
+
+if [ -z "$FILE_ID" ]; then
+  RESP=$(curl -s -m 8 -X POST "http://127.0.0.1:${PORT}/api/v1/mcp" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json, text/event-stream" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"fetch_file_info","arguments":{}}}' 2>/dev/null)
+  FILE_ID=$(printf '%s' "$RESP" | grep -o 'https://ardot.tencent.com/file/[0-9]*' | head -1)
+  [ -n "$FILE_ID" ] && FILE_ID="${FILE_ID##*/}"
+fi
+
+FILE_ID="${FILE_ID##*/}"
+
+if [ -z "$FILE_ID" ]; then
+  echo "ardot: 无法确定文件 ID。" >&2
+  echo "  用法: open-canvas <fileId-or-url>" >&2
+  echo "  提示: 需要先在 Ardot 客户端里打开一个设计文件。" >&2
+  exit 1
+fi
+
+URL="https://ardot.tencent.com/file/${FILE_ID}"
+
+# ARDOT_DRY_RUN=1 时只打印不打开，便于测试
+if [ "${ARDOT_DRY_RUN:-0}" = "1" ]; then
+  printf 'ardot: [dry-run] %s\n' "$URL"
+  exit 0
+fi
+
+printf 'ardot: 打开画布 %s\n' "$URL"
+
+case "$(uname -s)" in
+  # Windows: 用 explorer.exe 交给默认浏览器。
+  # 注意别用 cmd 的 start —— 在 Git Bash 里它会弹出 cmd 窗口而不是打开浏览器。
+  MINGW*|MSYS*|CYGWIN*) explorer.exe "$URL" 2>/dev/null || cmd.exe /c start "" "$URL" ;;
+  Darwin*)              open "$URL" ;;
+  *)                    xdg-open "$URL" 2>/dev/null || printf '请手动打开: %s\n' "$URL" ;;
+esac

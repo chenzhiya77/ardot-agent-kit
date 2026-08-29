@@ -1,0 +1,15 @@
+{
+  "name": "ardot-design",
+  "description": "Ardot 画布设计能力：在 Claude Code 里直接读写 Ardot 设计稿、由设计稿生成前端代码。内含 6 个技能包（设计工作流、UI/幻灯片/海报规范、出码流程）、Ardot MCP 自动接入、画布查看命令，以及会话启动时的连通性自检。",
+  "version": "1.0.0",
+  "author": {
+    "name": "self-use"
+  },
+  "keywords": [
+    "ardot",
+    "design",
+    "canvas",
+    "ui",
+    "design-to-code"
+  ]
+}

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# 会话启动时自检 Ardot 画布服务是否就绪。
+# 输出会作为上下文进入会话，让 agent 一开始就知道画布能不能用。
+#
+# ⚠️ 输出必须是 JSON。宿主（Claude Code / Qoder）把 command hook 的 stdout
+# 当 JSON 解析 —— 打纯文本会触发 "Stdout pollution" 解析错误，整条提示就丢了。
+# 走 hookSpecificOutput.additionalContext 是两家的正式契约。
+# 消息里不要出现双引号和反斜杠，否则得转义。
+
+set -uo pipefail
+
+PRIMARY_PORT=50501
+FALLBACK_PORT=50551
+
+emit() {
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$1"
+}
+
+health() { curl -s -m 2 "http://127.0.0.1:$1/api/v1/health" 2>/dev/null; }
+
+adapters_of() {
+  printf '%s' "$1" | grep -o '"adapters"[[:space:]]*:[[:space:]]*[0-9]*' \
+    | grep -o '[0-9]*$' | head -1
+}
+
+for port in "$PRIMARY_PORT" "$FALLBACK_PORT"; do
+  h=$(health "$port")
+  if [ -n "$h" ]; then
+    n=$(adapters_of "$h")
+    src="Ardot 客户端"
+    [ "$port" = "$FALLBACK_PORT" ] && src="WorkBuddy"
+    if [ "${n:-0}" -gt 0 ]; then
+      emit "ardot: 画布服务已就绪（${src}，端口 ${port}，${n} 个设计文件已打开）。可以直接使用画布工具。"
+    else
+      emit "ardot: 画布服务在运行（${src}，端口 ${port}），但当前没有打开任何设计文件（adapters=0）。画布工具会报 NO_ADAPTER。请先在 ${src} 里打开一个设计文件；若要从零新建，需改用 WorkBuddy 通道（端口 ${FALLBACK_PORT}，提供 create_design）。"
+    fi
+    exit 0
+  fi
+done
+
+emit "ardot: 画布服务未运行（端口 ${PRIMARY_PORT} 与 ${FALLBACK_PORT} 均无响应）。此时调用任何画布工具都会失败。请先启动 Ardot 客户端并打开设计文件；或启动 WorkBuddy。确认服务起来后提醒用户重开会话。"

@@ -1,0 +1,108 @@
+<svg viewBox="0 0 680 672" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>ardot-agent-kit 插件沿一次用户对话时间线的运作过程</title>
+<desc>纵向时间线共十个阶段：对话前插件启用连接 MCP 并常驻六条技能描述；会话启动触发 SessionStart 自检画布；用户发言后模型比对描述命中 router；加载领域技能与核心技能；Step 0 确认目标文件；Step 三到五取官方规范与风格系统；Step 六到七定位并批量编辑，此处首次触发 PreToolUse 提醒钩子；Step 八分层验证并用 open-canvas 查看画布；长会话压缩后触发 PostCompact 复位提醒标记。</desc>
+
+<rect x="0" y="0" width="680" height="672" fill="#FFFFFF"/>
+
+<g font-family="system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+
+<text x="40" y="26" font-size="14" font-weight="500" fill="#2C2C2A" dominant-baseline="central">一次对话里，插件各组件怎么先后运作</text>
+
+<line x1="156" y1="52" x2="156" y2="622" stroke="#D3D1C7" stroke-width="0.5"/>
+
+<text x="40" y="77" font-size="12" fill="#5F5E5A" dominant-baseline="central">对话前</text>
+<rect x="170" y="54" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="284" y="70" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">.mcp.json 自动连接</text>
+<text x="284" y="88" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">50501 · 21 工具进入工具列表</text>
+<rect x="412" y="54" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="526" y="70" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">6 条 description 常驻</text>
+<text x="526" y="88" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">约 1063 token，注册 3 个 hook</text>
+<circle cx="156" cy="77" r="3" fill="#B4B2A9"/>
+
+<text x="40" y="135" font-size="12" fill="#5F5E5A" dominant-baseline="central">会话启动</text>
+<rect x="170" y="112" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="284" y="128" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">SessionStart 自检</text>
+<text x="284" y="146" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">check-ardot 读 health 的 adapters</text>
+<rect x="412" y="112" width="228" height="46" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+<text x="526" y="128" font-size="14" font-weight="500" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central">结果写进上下文</text>
+<text x="526" y="146" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">就绪几个文件 / NO_ADAPTER</text>
+<circle cx="156" cy="135" r="3" fill="#B4B2A9"/>
+
+<text x="40" y="193" font-size="12" fill="#5F5E5A" dominant-baseline="central">用户发言</text>
+<rect x="170" y="170" width="470" height="46" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"/>
+<text x="405" y="186" font-size="14" font-weight="500" fill="#633806" text-anchor="middle" dominant-baseline="central">模型拿这句话比对 6 条 description</text>
+<text x="405" y="204" font-size="12" fill="#BA7517" text-anchor="middle" dominant-baseline="central">没有宿主替它判断，全靠关键词命中 —— 这是插件唯一的触发器</text>
+<circle cx="156" cy="193" r="3" fill="#B4B2A9"/>
+
+<text x="40" y="251" font-size="12" fill="#5F5E5A" dominant-baseline="central">命中</text>
+<rect x="170" y="228" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="284" y="244" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">加载 router</text>
+<text x="284" y="262" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">先做意图分类</text>
+<rect x="412" y="228" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="526" y="244" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">decision tree 分流</text>
+<text x="526" y="262" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">UI / 幻灯片 / 海报 / 出码</text>
+<circle cx="156" cy="251" r="3" fill="#B4B2A9"/>
+
+<text x="40" y="309" font-size="12" fill="#5F5E5A" dominant-baseline="central">加载技能</text>
+<rect x="170" y="286" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="284" y="302" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">domain 管 what</text>
+<text x="284" y="320" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">视觉契约与领域规范</text>
+<rect x="412" y="286" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="526" y="302" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">core 管 how</text>
+<text x="526" y="320" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">Step 0–8 工作流与硬规则</text>
+<circle cx="156" cy="309" r="3" fill="#B4B2A9"/>
+
+<text x="40" y="367" font-size="12" fill="#5F5E5A" dominant-baseline="central">Step 0</text>
+<rect x="170" y="344" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="284" y="360" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">从用户链接定目标</text>
+<text x="284" y="378" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">fileUrl 只在已开文件间选</text>
+<rect x="412" y="344" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="526" y="360" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">fetch_file_info 校验</text>
+<text x="526" y="378" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">ID 不符就停下问，不猜</text>
+<circle cx="156" cy="367" r="3" fill="#B4B2A9"/>
+
+<text x="40" y="425" font-size="12" fill="#5F5E5A" dominant-baseline="central">Step 3–5</text>
+<rect x="170" y="402" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="284" y="418" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">fetch_guidelines 优先</text>
+<text x="284" y="436" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">取不到再回退本地快照</text>
+<rect x="412" y="402" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="526" y="418" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">search → build_style_guide</text>
+<text x="526" y="436" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">挑风格，落成完整 token</text>
+<circle cx="156" cy="425" r="3" fill="#B4B2A9"/>
+
+<text x="40" y="483" font-size="12" fill="#5F5E5A" dominant-baseline="central">Step 6–7</text>
+<rect x="112" y="474" width="38" height="18" rx="4" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"/>
+<text x="131" y="483" font-size="11" fill="#633806" text-anchor="middle" dominant-baseline="central">hook</text>
+<rect x="170" y="460" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="284" y="476" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">locate_available_space</text>
+<text x="284" y="494" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">找空白，不压已有内容</text>
+<rect x="412" y="460" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="526" y="476" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">batch_edit，每批 ≤25 op</text>
+<text x="526" y="494" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">结构 → 内容 → 样式</text>
+<circle cx="156" cy="483" r="3" fill="#B4B2A9"/>
+
+<text x="40" y="541" font-size="12" fill="#5F5E5A" dominant-baseline="central">Step 8</text>
+<rect x="170" y="518" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="284" y="534" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">capture_layout / screenshot</text>
+<text x="284" y="552" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">T1–T5 分层验证，每段最多修 2 轮</text>
+<rect x="412" y="518" width="228" height="46" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"/>
+<text x="526" y="534" font-size="14" font-weight="500" fill="#633806" text-anchor="middle" dominant-baseline="central">open-canvas 看画布</text>
+<text x="526" y="552" font-size="12" fill="#BA7517" text-anchor="middle" dominant-baseline="central">浏览器视图，替代内嵌面板</text>
+<circle cx="156" cy="541" r="3" fill="#B4B2A9"/>
+
+<text x="40" y="599" font-size="12" fill="#5F5E5A" dominant-baseline="central">压缩后</text>
+<rect x="112" y="590" width="38" height="18" rx="4" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"/>
+<text x="131" y="599" font-size="11" fill="#633806" text-anchor="middle" dominant-baseline="central">hook</text>
+<rect x="170" y="576" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
+<text x="284" y="592" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">PostCompact → 清标记</text>
+<text x="284" y="610" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">reset-skill-hint 复位提醒</text>
+<rect x="412" y="576" width="228" height="46" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+<text x="526" y="592" font-size="14" font-weight="500" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central">下次调工具再提醒一次</text>
+<text x="526" y="610" font-size="12" fill="#5F5E5A" text-anchor="middle" dominant-baseline="central">规则可能已被挤出上下文</text>
+<circle cx="156" cy="599" r="3" fill="#B4B2A9"/>
+
+<line x1="40" y1="644" x2="640" y2="644" stroke="#D3D1C7" stroke-width="0.5"/>
+<text x="40" y="662" font-size="12" fill="#888780" dominant-baseline="central">蓝色 = 插件组件　琥珀 = 模型判断 / 宿主与外部　灰 = 中性结果　hook 徽章 = 该阶段有钩子介入</text>
+
+</g>
+</svg>

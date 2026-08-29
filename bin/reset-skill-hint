@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# 上下文压缩后清掉 check-skill-loaded 的「已提醒」标记，让它下次还能再提醒一次。
+#
+# 挂在 PostCompact 上（压缩完成那一刻触发）。
+#
+# 为什么需要它：长会话压缩时，早期消息会被总结掉——通过 Skill 工具加载进来的
+# 规则正文属于普通消息内容，可能被总结掉；但 MCP 工具定义每轮重新注入，不受影响。
+# 结果就是「工具还在手边、规则没了」，而这恰好是最需要那句提醒的时刻。
+# 可 check-skill-loaded 的标记是按 session_id 建的，压缩前后 session_id 不变，
+# 标记还在 → 不会重新提醒。本脚本就是在压缩后把标记删掉，把这道闸复位。
+#
+# ⚠️ 前提「压缩会丢掉 skill 正文」是推断，未实测。这条是便宜的保险，不是修已知 bug。
+#
+# 不产生 stdout —— command hook 的 stdout 会被当 JSON 解析，没内容就别输出。
+
+set -uo pipefail
+
+INPUT="$(cat 2>/dev/null)"
+
+SID="$(printf '%s' "$INPUT" \
+  | grep -o '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' \
+  | head -1 \
+  | sed 's/.*"\([^"]*\)"$/\1/')"
+
+TMPROOT="${TMPDIR:-${TEMP:-${TMP:-/tmp}}}"
+
+# ⚠️ Windows 上 TEMP/TMP 给的是 C:\Users\... 这种反斜杠路径。
+# shell 自己的重定向和 [ -e ] 能解析它，但 rm 是外部二进制，
+# 把反斜杠当字面字符 —— 会「静默删不掉」。统一转成 POSIX 形式。
+case "$TMPROOT" in
+  ?:\\*) TMPROOT="/$(printf '%s' "${TMPROOT%%:*}" | tr 'A-Z' 'a-z')$(printf '%s' "${TMPROOT#?:}" | tr '\\' '/')" ;;
+esac
+
+if [ -n "$SID" ]; then
+  # 精准删：只清当前会话的，不影响同时跑的其它会话
+  rm -f "${TMPROOT}/.ardot-skill-hint-${SID}" 2>/dev/null
+else
+  # 拿不到 session_id 才退化成全清（并发会话会各自多收到一次提醒，无害）
+  rm -f "${TMPROOT}"/.ardot-skill-hint-* 2>/dev/null
+fi
+
+exit 0

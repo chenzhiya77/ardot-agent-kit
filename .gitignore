@@ -1,0 +1,17 @@
+# 常规忽略规则。
+# 本插件目前是纯 Markdown + Shell，没有构建产物；留着防将来加 Python 脚本。
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# 本地覆盖（若将来加本地 MCP 配置副本）
+*.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 打包产物
+*.zip
