@@ -24,7 +24,7 @@ Always-on        ~1,063 tok
 | 组件 | 提供什么 |
 |---|---|
 | `skills/` | **脑** —— 6 个包 26 文件。8 步工作流、设计规则、风格黑名单、出码流程 |
-| `.mcp.json` | **手** —— 插件启用时自动连 `127.0.0.1:50501`，21 个工具直接可用 |
+| `.mcp.json` | **手** —— 插件启用时自动连 `127.0.0.1:50501`，22 个工具直接可用 |
 | `bin/` | **眼** —— `open-canvas` 成为 PATH 里的裸命令，随时打开画布 |
 | `hooks/` | **三道闸** —— ① 会话开始自检画布服务；② 调用画布工具时提醒"规则加载了没"；③ 压缩后把 ② 复位 |
 
@@ -33,7 +33,7 @@ Always-on        ~1,063 tok
 | hook | 时机 | 防的问题 |
 |---|---|---|
 | `SessionStart` → `check-ardot` | 会话开始一次 | 画布服务没起 / 没打开设计文件，模型不知情就动手 |
-| `PreToolUse` → `check-skill-loaded` | 调用 `mcp__ardot-*` 工具时，**每会话一次** | 「手在、脑没跟上」——MCP 启用即连，21 个工具第一回合就可见；但 skill 要靠关键词命中才加载。两者不同步时模型可能直接 `batch_edit` 而不知道 ≤25 op / 分层验证这些硬规则 |
+| `PreToolUse` → `check-skill-loaded` | 调用画布工具时，**每会话一次**（Qoder lazy-load 下 `tool_name` 恒为元工具 `mcp_call`，靠 matcher `mcp_call|mcp__.*ardot.*` 放行 + 脚本自检 stdin 内容过滤） | 「手在、脑没跟上」——MCP 启用即连，22 个工具第一回合就可见；但 skill 要靠关键词命中才加载。两者不同步时模型可能直接 `batch_edit` 而不知道 ≤25 op / 分层验证这些硬规则 |
 | `PostCompact` → `reset-skill-hint` | 上下文压缩完成后 | 压缩把早期消息总结掉，规则正文可能随之出上下文；但工具定义每轮重新注入。这时最需要 ② 那句提醒，而 ② 的标记是按 `session_id` 建的、压缩前后不变 → 会被永久屏蔽。本 hook 删掉标记，把 ② 复位 |
 
 `check-skill-loaded` 用 `session_id` 打标记去重，不会每次工具调用都刷屏；
@@ -59,7 +59,7 @@ Always-on        ~1,063 tok
 
 **① 用户开口之前，插件已经跑了两步。**
 `.mcp.json` 连上 MCP、6 条 description 进常驻上下文、3 个 hook 完成注册——都在对话开始前。
-所以模型第一回合就能看到 21 个工具，这不是被"触发"出来的，是一直在那儿。
+所以模型第一回合就能看到 22 个工具，这不是被"触发"出来的，是一直在那儿。
 
 **② 整条线上只有一个地方靠猜。**
 就是「用户发言 → 比对 description」。宿主版在这一步由宿主直接注入，插件版只能靠关键词命中。
@@ -124,11 +124,20 @@ qoder plugins install /path/to/ardot-agent-kit
 
 - **Settings → Skills**：6 个 ardot 技能在列
 - **插件详情页**：SessionStart / PreToolUse 两个 hook 为 runnable；
-  PostCompact 显示 unsupported 警告属预期（ZCode 只支持 7 个事件，没有 PostCompact）
-- **Settings → MCP**：`ardot-desktop` 自动连上（21 个工具）
+  PostCompact 显示 unsupported 警告属预期（ZCode 只支持 7 个事件，没有 PostCompact）。
+  ⚠️ 但 **runnable 不等于跑得动** —— 见下面那条 Windows 不兼容
+- **Settings → MCP**：`ardot-desktop` 自动连上（22 个工具）
 
 > ⚠️ 装插件**前**记得移除用户级的 ardot MCP，否则工具名会重复：
 > `claude mcp remove ardot-desktop --scope user`
+
+> 🔴 **已知不兼容（Windows）**：ZCode 用 `%ComSpec%`（cmd.exe）执行 command hook ——
+> `zcode.cjs` 的 `resolveShell` 核实过，且 hook 条目没带 `shellProfile:"posix-bash"`。
+> 而本插件三个 hook 的命令行都是 POSIX 一行式（`if [ -n "${QODER_PLUGIN_ROOT}" ]; then …; fi`），
+> 放进 cmd.exe 实测 `exit=1`。**所以在 Windows 的 ZCode 上三道闸都不会生效**，
+> 「事件支持」只说明宿主会去调它。修法未定：要么按宿主拆一套 cmd 写法的 command，
+> 要么改成单条可执行 + `args` 形态绕开 shell。在定下来之前，ZCode 上按
+> 「闸失效后的退化方案」办 —— 把硬规则放进常驻规则。
 
 ---
 
@@ -156,7 +165,7 @@ open-canvas 719793184410961        # 打开指定文件
 ```
 ardot-agent-kit/                   ← 插件根目录
 ├── .claude-plugin/plugin.json     ← 插件清单
-├── .mcp.json                      ← 自动注册 ardot-desktop（21 工具）
+├── .mcp.json                      ← 自动注册 ardot-desktop（22 工具）
 ├── bin/
 │   ├── open-canvas                ← 浏览器打开画布
 │   ├── check-ardot                ← 会话启动自检（hook 调用）
@@ -188,7 +197,7 @@ ardot-agent-kit/                   ← 插件根目录
 > 从零起稿请走「仍然存在的差距」里写的两条路。
 >
 > 更正：早期版本这里写的是「Ardot 客户端不支持 fileId」——严格说对，但容易误读。
-> A 只是不认 `fileId` 这个键名，它用 `fileUrl`，且 **18 / 21 个工具都支持**。
+> A 只是不认 `fileId` 这个键名，它用 `fileUrl`，且 **19 / 22 个工具都支持**。
 > 详见 `skills/ardot-design-core/SKILL.md` → Step 0。
 脚本本身无第三方依赖，不装也能留着看逻辑。
 
@@ -201,7 +210,7 @@ ardot-agent-kit/                   ← 插件根目录
 | | A · Ardot 客户端 | B · WorkBuddy 内置 | C · 云端 |
 |---|---|---|---|
 | 端点 | `127.0.0.1:50501` | `127.0.0.1:50551` | `ardot.tencent.com/mcp` |
-| 工具 | **21** | 20 | 未实测 |
+| 工具 | **22** | 20 | 未实测 |
 | 从零起稿 | ❌ | ✅ `create_design` | ❌ |
 | 依赖 | Ardot 客户端 | WorkBuddy | 无 |
 | 官方承诺 | ✅ | ❌ 内部实现 | ✅ |
@@ -212,11 +221,11 @@ ardot-agent-kit/                   ← 插件根目录
 claude mcp add ardot-local --transport http http://127.0.0.1:50551/api/v1/mcp --scope user
 ```
 
-工具集互补：共有 17，**仅 A** 有 `export_variables` / `fetch_guidelines` / `html_to_ardot` / `register_assets`，**仅 B** 有 `create_design` / `open_design` / `save_tokens`。并集 24。
+工具集互补：共有 17，**仅 A** 有 `export_variables` / `fetch_guidelines` / `fetch_styles` / `html_to_ardot` / `register_assets`，**仅 B** 有 `create_design` / `open_design` / `save_tokens`。并集 25。
 
 其中 `fetch_guidelines` 已经接进工作流——通路 A 上 `ardot-design-core` 的 Step 3 会**优先调它取官方活版本**，取不到才回退本地 `guidelines-*.md` 快照。8 个 topic 与本地文件的对应关系见 `skills/PORT-NOTES.md`。另外三个仍未被任何工作流调用。
 
-> 📌 官方文档写「18 个工具」已过时，实测是 21。**以 `tools/list` 实测为准。**
+> 📌 官方文档写「18 个工具」已过时，2026-09-01 实测是 22（08-29 是 21，客户端升级加了 `fetch_styles`）。**以 `tools/list` 实测为准。** <!-- skip-ref-check -->
 
 ---
 
@@ -255,6 +264,11 @@ claude mcp add ardot-local --transport http http://127.0.0.1:50551/api/v1/mcp --
 | **Cursor** | ❌ | ❌ | ❌ | 只有 `.cursor/rules/*.mdc`，没有生命周期 hook |
 | **Codex** | ❌ | ❌ | ❌ | 只认 `AGENTS.md`，已停止支持 |
 | 其它通用 agent | ❌ | ❌ | ❌ | 无 hook 机制 |
+
+> ⚠️ 表里的 ✅ 只回答「宿主支持这个事件、会去调 command」，不回答「这条 command 跑不跑得起来」。
+> Windows 上的第二问要问一句：这个宿主用 bash 还是 cmd.exe 执行 command hook？
+> Claude Code 与 Qoder 走 bash（本插件的 POSIX 一行式实测有效），ZCode 走 `%ComSpec%`，
+> 于是同一行命令在它那儿 `exit=1` —— 详见上面 ZCode 安装节的红框。
 
 #### Qoder hook 官方文档在哪
 
@@ -419,7 +433,7 @@ curl http://127.0.0.1:50551/api/v1/health    # B（返回里有 "status":"ok"）
 - **`adapters: 0`** → 客户端没打开设计文件，画布工具会报 `NO_ADAPTER`。
   **这是最常见的卡点** —— 必须先在 Ardot 客户端里打开一个文件。
 - **连不上** → 客户端没运行
-- **工具数不对** → 连错端口，A=21 / B=20
+- **工具数不对** → 连错端口，A=22 / B=20
 - **Windows 上 `open-canvas` 弹 cmd 窗口** → 已修（改用 `explorer.exe`，别用 cmd 的 `start`）
 
 组件差异细节见 `skills/PORT-NOTES.md`。
@@ -430,20 +444,25 @@ curl http://127.0.0.1:50551/api/v1/health    # B（返回里有 "status":"ok"）
 
 ```bash
 python scripts/check-refs.py          # 内置工具快照，离线可用
-python scripts/check-refs.py --live   # 实测本机 MCP（50501/50551），以实测为准
+python scripts/check-refs.py --live   # 实测本机 MCP，与内置快照取并集（只开一条通路也能跑）
 python scripts/check-refs.py -q       # 只报问题
 ```
 
-退出码 `0` = 全过，`1` = 有问题。可直接挂 git pre-commit。
+退出码 `0` = 全过，`1` = 有问题。可直接挂 git pre-commit：
 
-查四类问题：
+```bash
+cp scripts/git-hooks/pre-commit .git/hooks/pre-commit
+```
+
+查五类问题：
 
 | 检查 | 抓什么 |
 |---|---|
 | **路径引用解析** | `{SKILL_ROOT}/...` 和 `../...` 是否真能解析到存在的文件 |
-| **工具名有效性** | 反引号里疑似工具名的东西，是否真在实测的 24 个工具里 |
+| **工具名有效性** | 反引号里疑似工具名的东西，是否真在那 25 个工具清单里（默认用内置快照，`--live` 时并入实测） |
 | **frontmatter** | 6 个技能是否都有 `name` + `description`，有无残留 `disable-model-invocation` / `allowed-tools` |
 | **README 数字** | 「6 个包 N 文件」「Hooks (N)」「core (N)」是否与实际相符 |
+| **全仓数字口径** | 任何文件里写死的工具数与比例（含 `bin/`、`install.sh`、`docs/` 的图）是否与 `CANON` 真值相符 |
 
 ### 为什么需要它
 
@@ -451,16 +470,49 @@ python scripts/check-refs.py -q       # 只报问题
 上游用 `<ardot-design-core>/xxx` 占位符（绝对路径由宿主注入，与文件深度无关），
 改成相对路径后，子目录里的文件要多上一级。**这玩意识别不出来——读起来完全合理。**
 
-自检脚本就是为这个写的，已做回归测试：注入三类 bug（路径层级错 / 虚构工具名 / 删 frontmatter）
-都能精确报出文件和行号。
+自检脚本就是为这个写的，已做回归测试：注入四类 bug（路径层级错 / 虚构工具名 / 删 frontmatter /
+数字过期）都能精确报出文件和行号。
+
+第二个动因是 2026-09-01：Ardot 客户端升级把通路 A 的工具数从 21 提到 22，全仓 6 处写死的
+数字同时过期 —— 而当时的自检**照样报「41 项全过」**。它只 walk `skills/` 查路径与工具名，
+数字仅在 README 里比，`bin/`、`install.sh`、`docs/` 的图根本不在射程内。
+「全过」和「6 处过期」同时成立，就是第 5 项检查要堵的那个洞。
+
+第三个动因是 2026-09-02 凌晨：`--live` 只连着通路 A 时，把 B 独有的 `create_design` 等三个工具
+在文档里的正当引用整批判成「虚构工具名」，实跑 35 条假问题、exit 1。没应答的通路不等于
+没有工具 —— 现在 `--live` 判的是「实测 ∪ 快照」，单通路在线时差集只出「提示」行，
+两条通路都应答而对不上才算过期。
 
 ### 豁免标记
 
-文档里的**示例**路径不是真实引用，在行尾加 `<!-- skip-ref-check -->` 跳过该行。
-`PORT-NOTES.md` 的路径规则表已用上。
+文档里的**示例**路径、示例工具名、以及**引用旧口径的历史叙述**，都不是当前声明 —— 在行尾加
+`<!-- skip-ref-check -->` 跳过该行，五类检查一起豁免。
+最典型的用法就是引用官方旧口径那句「官方文档写 18 个工具已过时」 <!-- skip-ref-check -->
+已用在：`PORT-NOTES.md` 的路径规则表，以及 `README.md`、`PORT-NOTES.md` 各一处旧口径引用。
 
 ### 维护约定
 
 - 新增了不是工具名、但长得像工具名的词 → 加进脚本里的 `ALLOWED_NON_TOOLS`，**并写清理由**
 - 技能文件增删 → 同步改 README 里的数字，否则自检会报
-- 内置工具快照在 `scripts/check-refs.py` 顶部，Ardot 升级后跑一次 `--live` 核对
+- 内置工具快照与数字口径真值表（`TOOL_SNAPSHOT` / `CANON`）都在 `scripts/check-refs.py` 顶部。
+  Ardot 升级后跑一次 `--live` 核对，改数字时两处一起改 —— 第 5 项会把全仓要改的点全列出来
+- `--live` 只连上一条通路也能跑：未应答通路的独有工具由快照兜住，两边差集打成「提示」行而不是
+  问题。只有两条通路都应答、快照仍与实测对不上，才是真过期
+
+## 打包
+
+应打包集合 = git 跟踪清单 − `.workbuddy/`（当前 42 文件）。单独存成 `scripts/package-manifest.txt`，
+校验时只认这份清单，不重新算 —— 避免「用同一份过滤结果既铺 staging 又核对包内成员」的自证陷阱。
+
+```bash
+python scripts/package.py                        # 打包 + 按清单校验
+python scripts/package.py --write-manifest       # 有意增删技能文件后，改写清单（会显示 diff 要求确认）
+python scripts/package.py --write-manifest --yes # 跳过确认（CI / 脚本调用）
+python scripts/package.py --allow-untracked      # 有未跟踪文件也照样打包（默认直接失败）
+```
+
+退出码 `0` = 打包 + 校验全过，`1` = 中止或校验失败。校验三项：包内成员与清单双向相符、
+内容与磁盘逐文件 SHA-256 一致、权限位统一 `0o100666`。
+
+Windows 上必须用 `C:\Windows\System32\tar.exe`（bsdtar）出 zip —— Git Bash 自带的 GNU tar
+即使后缀写成 `.zip` 也只产出 ustar 归档。脚本里写死了绝对路径。

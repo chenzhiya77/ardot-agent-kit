@@ -7,7 +7,7 @@
 #   真实工具名（含 ardot 的限定名）在 tool_input.toolName 里（2026-08-29 实测），
 #   matcher 无法区分 —— 由下方脚本读 stdin 自检，不含 ardot 就静默退出。
 #
-# 为什么需要它：MCP 在插件启用时就连上了，21 个工具从第一回合就可见；
+# 为什么需要它：MCP 在插件启用时就连上了，22 个工具从第一回合就可见；
 # 而 skill 要靠 description 关键词命中才加载。两者不同步时会出现
 # 「工具在手边、规则没加载」——模型可能直接上手 batch_edit 而不知道
 # 每批 ≤25 op、分层验证、先结构后内容再样式这些硬约束。
@@ -21,9 +21,21 @@ set -uo pipefail
 
 INPUT="$(cat 2>/dev/null)"
 
-# 内容自检：stdin 里（tool_name 或 tool_input）不含 ardot 就不是画布调用，
-# 静默退出 —— matcher 放行了所有 mcp_call，非 ardot 的 MCP 调用都从这里滤掉。
-printf '%s' "$INPUT" | grep -q 'ardot' || exit 0
+# 内容自检：只看「工具身份」，不看整包 stdin。
+# matcher 放行了所有 mcp_call，非 ardot 的 MCP 调用都从这里滤掉。
+# ⚠️ 别退回成 `grep -q ardot` 扫整包：stdin 里带 transcript_path 与 cwd，
+# 而本项目路径本身就含 ardot —— 那样任何 MCP 调用都放行，第一条不相干的调用
+# 就把「每会话一次」的标记烧掉，真正的画布调用反而收不到提醒（2026-09-01 实测）。
+# 宿主可能把 tool_input 整体转义成字符串，先 tr 掉反斜杠，两种形态都能取到。
+TOOLS="$(printf '%s' "$INPUT" | tr -d '\\' \
+  | grep -oE '"(tool_name|toolName)"[[:space:]]*:[[:space:]]*"[^"]*"' \
+  | cut -d'"' -f4)"
+
+# 连工具名都取不到（宿主换了 stdin 格式）时退回宽松匹配：宁可多提示一次，
+# 也别让整道闸静默。
+[ -z "$TOOLS" ] && TOOLS="$INPUT"
+
+printf '%s' "$TOOLS" | grep -qi 'ardot' || exit 0
 
 # 从 hook 的 stdin JSON 里取 session_id。
 # 不依赖 jq —— 它不一定装了。

@@ -22,7 +22,7 @@ SKILLS_SRC="$KIT_DIR/skills"
 
 # 服务名按实际探测到的通路决定（在下面探测之后赋值）。
 # 命名必须与 skills/PORT-NOTES.md 一致，否则 agent 会按错的工具集行动：
-#   50501 = 通路 A → ardot-desktop（21 工具，无 create_design）
+#   50501 = 通路 A → ardot-desktop（22 工具，无 create_design）
 #   50551 = 通路 B → ardot-local  （20 工具，有 create_design）
 SERVER_NAME=""
 CHANNEL=""
@@ -127,7 +127,7 @@ say "  技能包: ${installed} 个 / $(find "$SKILLS_SRC"/ardot-* -type f | wc -
 if [ "$SKILLS_ONLY" -eq 0 ]; then
   say "  MCP:    ${MCP_URL}（通路 ${CHANNEL} · ${CHANNEL_LABEL}，注册为 ${SERVER_NAME}）"
   if [ "$CHANNEL" = "A" ]; then
-    say "  工具:   21 个 —— 含 fetch_guidelines / html_to_ardot / export_variables / register_assets"
+    say "  工具:   22 个 —— 含 fetch_guidelines / html_to_ardot / export_variables / register_assets"
     warn "无 create_design / open_design：只能操作客户端里已打开的那一个文件。"
     warn "要从零起稿，请在 Ardot 客户端/网页端先建好文件再粘贴链接；"
     warn "或加连通路 B（WorkBuddy 50551）用其 create_design，见 README「三条 MCP 通路」。"

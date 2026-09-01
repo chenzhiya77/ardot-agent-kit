@@ -32,25 +32,47 @@ if [ -z "$PORT" ]; then
   exit 1
 fi
 
-FILE_ID="${1:-}"
+RAW="${1:-}"
+FILE_ID=""
 
-if [ -z "$FILE_ID" ]; then
+if [ -n "$RAW" ]; then
+  # 接受裸 fileId、任意 scheme 的 <host>/file/<id>，也容错 ?node_id=… 与尾斜杠
+  FILE_ID="${RAW%%[?#]*}"
+  FILE_ID="${FILE_ID%/}"
+  case "$FILE_ID" in */*) FILE_ID="${FILE_ID##*/}" ;; esac
+  case "$FILE_ID" in
+    ''|*[!0-9]*)
+      echo "ardot: 参数里认不出 fileId —— $RAW" >&2
+      echo "  接受：纯数字 fileId，或 …/file/<数字>（可带 ?node_id=… 和尾斜杠）" >&2
+      exit 1 ;;
+  esac
+else
   RESP=$(curl -s -m 8 -X POST "http://127.0.0.1:${PORT}/api/v1/mcp" \
     -H "Content-Type: application/json" \
     -H "Accept: application/json, text/event-stream" \
     -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"fetch_file_info","arguments":{}}}' 2>/dev/null)
-  # 通路 A 响应是 SSE 流且 fileUrl 用 cocraft:// scheme —— 优先抓 fileId 字段,
-  # 抓不到再退回任意 file/<数字> 形态(两种 scheme 都能命中)。
-  FILE_ID=$(printf '%s' "$RESP" | grep -oE '"fileId"[[:space:]]*:[[:space:]]*"?[0-9]+' | head -1 | grep -oE '[0-9]+$')
-  [ -z "$FILE_ID" ] && FILE_ID=$(printf '%s' "$RESP" | grep -oE 'file/[0-9]+' | head -1 | grep -oE '[0-9]+$')
+  # 通路 A 响应是 SSE 流且 fileUrl 用 cocraft:// scheme —— fileId 字段与 file/<数字>
+  # 两种形态一起抓，再去重。⚠️ 别写成 '"fileId":<数字>' 这种带引号的字面量：SSE 的
+  # data 行里内层 JSON 是转义过的（\"fileId\":\"<id>\"），字面的 "fileId" 从不出现。
+  IDS=$(printf '%s' "$RESP" \
+    | grep -oE 'fileId[^0-9]{0,8}[0-9]{6,}|file/[0-9]{6,}' \
+    | grep -oE '[0-9]{6,}$' | sort -u)
+  case "$(printf '%s' "$IDS" | grep -c '[0-9]')" in
+    0) FILE_ID="" ;;
+    1) FILE_ID="$IDS" ;;
+    *)
+      # 客户端开了多个文件时 fetch_file_info 会返回候选列表 —— 不替你猜
+      echo "ardot: 检测到 ${PORT} 端口打开了多个设计文件，无法确定该看哪个。请指定：" >&2
+      printf '%s\n' "$IDS" | while read -r id; do
+        [ -n "$id" ] && echo "  open-canvas $id" >&2
+      done
+      exit 1 ;;
+  esac
 fi
 
-FILE_ID="${FILE_ID##*/}"
-
 if [ -z "$FILE_ID" ]; then
-  echo "ardot: 无法确定文件 ID。" >&2
-  echo "  用法: open-canvas <fileId-or-url>" >&2
-  echo "  提示: 需要先在 Ardot 客户端里打开一个设计文件。" >&2
+  echo "ardot: 没能确定文件 ID —— 服务在跑（端口 ${PORT}），但没有可用的设计文件。" >&2
+  echo "  先在 Ardot 客户端里打开一个文件，或直接指定：open-canvas <fileId-or-url>" >&2
   exit 1
 fi
 

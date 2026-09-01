@@ -91,7 +91,7 @@ See **Standard Workflow → Step 0** below.
 >
 > | | 参数名 | 覆盖工具 | 只开 1 个文件时 | 开多个且未指定 |
 > |---|---|---|---|---|
-> | **A** | `fileUrl` | **18 / 21**（除 `build_style_guide` `search_style_guide` `fetch_guidelines`，这 3 个与文件无关） | 可省略，自动命中 | 按工具描述会返回可选文件列表让你挑 |
+> | **A** | `fileUrl` | **19 / 22**（除 `build_style_guide` `search_style_guide` `fetch_guidelines`，这 3 个与文件无关） | 可省略，自动命中 | 按工具描述会返回可选文件列表让你挑 |
 > | **B** | `fileId` | 16 / 20（`open_design` 两者都收） | — | 实测直接报 `ROUTE_KEY_REQUIRED` |
 >
 > **A 的 `fileUrl` 要点**（2026-08-29 实测）：
@@ -136,6 +136,7 @@ Read whatever state is relevant to the task. **Issue all independent reads in a 
 |---|---|---|
 | Freshly created empty file | **nothing** | Empty canvas — root is `0:1`, no variables yet. Skip Step 1, go straight to Step 2. |
 | Opened existing file / file already loaded | `fetch_editor_state({includeSchema: false})` + `fetch_variables` | Parallel in one message. |
+| Task must match existing paint / font / effect values (restyle, design-to-code, style audit) | **plus** `fetch_styles` — omit `styleIds` to list all, or narrow with `styleTypes: ["FILL"]` | Same message, parallel. Shared styles are a **separate store from variables** — `fetch_variables` does not cover them. An empty file returns `styles: []` with an `issue` note; that is a normal empty result, not a failure. |
 | Pure modification (file already loaded, target known) | The above **plus** any of `batch_read` / `capture_layout` / `capture_screenshot` as needed | All parallel in one message. |
 
 ### Step 2: Creative vs. Compositional

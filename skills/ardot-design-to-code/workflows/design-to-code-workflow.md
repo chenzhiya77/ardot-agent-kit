@@ -259,7 +259,15 @@ For complex projects, expand to:
 
 ### Step 3.2: CSS Variable Extraction
 
-use `fetch_variables()` to extract variables from the design.
+Two **separate** stores — read both, in one parallel message:
+
+- `fetch_variables()` — design variables (tokens).
+- `fetch_styles()` with `styleIds` omitted — the file's local shared styles: FILL paints,
+  TEXT font sets (`fontFamily` / `fontSize` / `lineHeight` / `letterSpacing`), EFFECT paints.
+  A file coloured or typeset through shared styles shows **nothing** in `fetch_variables()`.
+  Narrow with `styleTypes: ["FILL"]` when you only need colors. Empty result
+  (`styles: []` + an `issue` note) just means the file defines no shared styles.
+
 Extract frequently reused colors, fonts, etc. from the design and define as CSS variables:
 
 ```css

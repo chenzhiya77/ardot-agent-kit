@@ -176,7 +176,7 @@ These rules are enforced throughout Phase 2-5. References to "Rule 1/2/3" in lat
    🔧 *port note:* 若还没确认过目标文件，可在本批里并行发一次 `fetch_file_info`；通路 A 没有 `create_design` 分支，无需延后等待异步加载。
 2. Review the returned candidates, select best fit per domain
 3. Call `build_style_guide` with your selections to get the complete design system
-4. If the returned style does not fit the topic or contradicts the approved style, call `search_style_guide` again with adjusted keywords or `true` for full catalog, or make your own style guide
+4. If the returned style does not fit the topic or contradicts the approved style, call `search_style_guide` again with adjusted `styleKeywords` — or `styleKeywords: true` for the full catalog — or make your own style guide
 
 **Output of Phase 1**: a concrete color palette, type scale, spacing tokens, and decorative motif to apply consistently across all slides.
 

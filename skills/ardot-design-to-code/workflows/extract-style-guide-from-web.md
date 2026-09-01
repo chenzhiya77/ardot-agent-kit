@@ -38,7 +38,7 @@ Phase 4: Verification (screenshot each section)
 > 一定存在。**默认通路 A（Ardot 客户端）两样都没有。** 出这里：
 > - 目标文件 = **用户粘贴的链接**，且必须用 `fetch_file_info` 核对与实际打开的是同一个。
 > - 没有链接 → **先问**，不要猜。
-> - 通路 A 不认 `fileId`，但 **18 / 21 个工具接受 `fileUrl`**（见 core Step 0）。
+> - 通路 A 不认 `fileId`，但 **19 / 22 个工具接受 `fileUrl`**（见 core Step 0）。
 >   用户粘贴的网页版链接可以直接原样传。注意它只能在**客户端已打开的文件之间选择**，
 >   打不开没打开的文件——那种情况会得到 `NO_ADAPTER`。
 
@@ -308,7 +308,7 @@ cardTitle=I(cardBody, {type: "text", content: "Title", fontSize: 20, fontWeight:
 cardDesc=I(cardBody, {type: "text", content: "Description", fontSize: 14, fill: "<text-muted>"})
 ```
 
-Optionally use `G()` to add stock/AI images to card image areas.
+Card image areas: use `G(node, "placeholder", "short label")`. Channel A has no stock search and no image generation, so a real photo has to arrive as a file and go in through `upload_images`.
 
 ---
 

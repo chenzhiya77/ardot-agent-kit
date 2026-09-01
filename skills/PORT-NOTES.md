@@ -2,8 +2,8 @@
 
 给 agent 看的第一份文件。说明有三条 MCP 通路、各自的工具集、以及跟在 WorkBuddy 里用有什么不同。
 
-> ⚠️ **工具数以实测为准，不以文档为准。** 官方文档写「18 个工具」已过时：
-> 2026-08-29 实测 Ardot 客户端本地 MCP 返回 **21 个**。下面所有数字均为 `tools/list` 实测。
+> ⚠️ **工具数以实测为准，不以文档为准。** 官方文档写「18 个工具」已过时： <!-- skip-ref-check -->
+> 2026-09-01 实测 Ardot 客户端本地 MCP 返回 **22 个**（08-29 是 21，客户端升级加了 `fetch_styles`）。下面所有数字均为 `tools/list` 实测；B 通路 09-01 未运行，其 20 沿用 08-29 实测。
 
 ---
 
@@ -63,8 +63,8 @@ skills/
 |---|---|---|---|
 | 端点 | `http://127.0.0.1:50501/api/v1/mcp` | `http://127.0.0.1:50551/api/v1/mcp` | `https://ardot.tencent.com/mcp` |
 | MCP 服务名 | `ardot-desktop` | `ardot-local` | `ardot-remote` |
-| 工具数 | **21** | **20** | 未实测（文档称 18） |
-| 指定目标文件 | **`fileUrl`**（18/21 工具） | **`fileId`**（16/20 工具） | 未实测 |
+| 工具数 | **22** | **20** | 未实测（文档称 18） |
+| 指定目标文件 | **`fileUrl`**（19/22 工具） | **`fileId`**（16/20 工具） | 未实测 |
 | 依赖 | Ardot 客户端运行 | **WorkBuddy 运行** | 无 |
 | 限速 | 无 | 无 | 600 次/天、20 次/分钟 |
 | 官方承诺 | ✅ | ❌ 内部实现 | ✅ |
@@ -88,24 +88,28 @@ skills/
   locate_available_space  scan_exportable_resources  search_style_guide
   upload_images
 
-仅 A（Ardot 客户端）4 个：
+仅 A（Ardot 客户端）5 个：
   export_variables     导出变量（W3C Design Tokens 等格式）
   fetch_guidelines     官方规范，8 主题（见下）
+  fetch_styles         本地共享样式全量定义（FILL / TEXT / EFFECT）※09-01 新增
   html_to_ardot        HTML → 设计稿（配合 register_assets）
   register_assets      注册素材，换取临时上传/下载 URL
+
+  ※ 归在「仅 A」是按 08-29 的 B 快照推的 —— B 侧 09-01 没运行、未复测。
 
 仅 B（WorkBuddy）3 个：
   create_design        新建设计文件
   open_design          按 URL 或 ID 打开已有文件
   save_tokens          保存 token
 
-并集 24 个
+并集 25 个
 ```
 
-> ⚠️ **A 独有的 4 个里，只有 `fetch_guidelines` 接进了工作流**
-> （见 `ardot-design-core/SKILL.md` → Step 3）。
-> `export_variables` / `html_to_ardot` / `register_assets` **仍只写在这份文档里**，
-> 没有任何工作流调用——需要时你自己判断何时用。
+> ⚠️ **A 独有的 5 个里，已接进工作流的是 `fetch_guidelines` 与 `fetch_styles`**
+> （前者见 `ardot-design-core/SKILL.md` → Step 3；后者见同文件 Step 1 读取表、
+> `ardot-workflow.md` Example D Step 2、`design-to-code-workflow.md` Step 3.2）。
+> 剩下 `export_variables` / `html_to_ardot` / `register_assets` 只出现在
+> `ardot-design-to-code/SKILL.md` 的说明里，**没有工作流步骤调用它们**——需要时自己判断何时用。
 
 ### fetch_guidelines：8 个 topic 与本地文件一一对应
 
@@ -136,12 +140,25 @@ skills/
 - **WorkBuddy 没开，又要从零画** → 先在 ardot.tencent.com 网页端手动新建，再用 A 接链接
 - **没有本机客户端（远程环境）** → C
 
-A 和 B 已同时注册到 Claude Code，可共存。
+A 与 B **可以共存**（同名工具各带一份，按下面的规则挑），但本 kit 默认只接 A ——
+B 要手动加，见 README「三条 MCP 通路」。**别假设两条都在手边**：这是逐台机器、逐次启动
+都不同的状态，动手前用 `tools/list` 实测，或看 SessionStart 那句自检输出报的是哪条通路。
 
 ### ⚠️ 两个 server 同时连时的选择规则
 
-同时连接时工具名会带前缀（`mcp__ardot-desktop__batch_edit` / `mcp__ardot-local__batch_edit`），
-同名工具出现两次，**必须按用途选，不要随便挑一个**：
+同名工具出现两次，**必须按用途选，不要随便挑一个**。限定名的形态取决于安装方式：
+
+| 安装方式 | `batch_edit` 的限定名 |
+|---|---|
+| 用户级 `claude mcp add`（`install.sh` 走这条） | `mcp__ardot-desktop__batch_edit` / `mcp__ardot-local__batch_edit` |
+| **插件方式**（Claude Code / Qoder / ZCode） | `mcp__plugin_<插件名>_<server>__batch_edit`，如 `mcp__plugin_ardot-design_ardot-desktop__batch_edit` |
+
+插件那一行的依据：Qoder 桌面端 2026-09-01 实测；ZCode 由 `zcode.cjs` 源码核实同一形态；Claude Code 按同源命名规则推断，未实测。
+
+⚠️ **技能正文里请写裸工具名（`batch_edit`），不要写限定名。** Qoder 桌面端开着 MCP 惰性加载：
+模型侧看不到这些限定名，所有 MCP 调用都走元工具 `mcp_call`，真实名字在参数 `toolName` 里 ——
+限定名只在写 hook matcher 时才用得上（README「三个 hook 分别在防什么」有实测说明）。写死前缀的
+另一重风险是换宿主就失效：插件模式下前缀含插件名，用户级安装又是另一种形态。
 
 | 你要做什么 | 用哪个 |
 |---|---|
@@ -181,15 +198,21 @@ A 和 B 已同时注册到 Claude Code，可共存。
 |---|---|---|---|
 | `ardot-design-core/rules/design-rules.md` → Working with Design Variables | `get_editor_state` / `set_variables` | **`fetch_editor_state`** / **`apply_variables`** | 上游写的这两个工具名在 A、B 两条通路上**都不存在**（2026-08-29 `tools/list` 实测）。它正好在 token 绑定路径上，不修必然报 unknown tool |
 | `ardot-design-core/workflows/ardot-workflow.md` → Example C | `scan_all_unique_properties` / `substitute_all_matching_properties` | `batch_read` 盘点 + `apply_variables` / `batch_edit` 分批 Update | 见下方「未暴露的工具」 |
+| `ardot-ui-design/references/guidelines-landing-page.md`（Photography / Image sourcing / AI Images Rule / hero 示例）+ `ardot-design-to-code/workflows/extract-style-guide-from-web.md` → Section 3 | 上游称 `G()` 能搜 Unsplash 素材、能 AI 生图，示例还写着 `G(hero, "ai", …)` | `G()` 仅 `"placeholder"`；真实图像先用 `upload_images` 贴成 IMAGE fill，其它资产走 `register_assets` | 通路 A 的 `batch_edit` 工具描述原文：`G() is placeholder-only`、"No real image asset, no image-generation budget"（2026-09-02 `tools/list` 实测）。按上游写法发出的 op 会被 schema 拒 |
 
 ---
 
 ## 未暴露的工具（别调用）
 
-`scan_all_unique_properties`、`substitute_all_matching_properties`
+`scan_all_unique_properties`、`substitute_all_matching_properties`、`search_styles`
 
-⚠️ **当前版本未对外暴露，调用了会失败。** 它们并非虚构——WorkBuddy 内部注册表有 28 条、
-只暴露 20 条，这两个就在未暴露的 10 条里。
+⚠️ **当前版本未对外暴露，调用了会失败。** 前两个并非虚构——WorkBuddy 内部注册表有 28 条、
+只暴露 20 条，它们就在未暴露的 10 条里。
+
+`search_styles` 是 2026-09-01 新发现的一类，和上面两个不同源：**服务端自己的工具描述里
+引用了它**（`fetch_styles` 写着 "preferred after search_styles"、"use search_styles with
+`enabledLibraryKey`"），但 `tools/list` 并不返回它。所以别把某个工具描述里的推荐调用顺序
+当成工具存在的证据 —— 以 `tools/list` 为准。
 
 （`ardot-workflow.md` 的 Example C **原版曾引用它们**，现已替换为
 `batch_read` 盘点 + `batch_edit` 分批 Update / `apply_variables`。若你读的是 WorkBuddy
@@ -232,7 +255,7 @@ A 和 B 已同时注册到 Claude Code，可共存。
 | `ROUTE_KEY_REQUIRED: Unable to resolve route key in strict mode` | 通路 B 上开着多个文件却没传 `fileId`。**每次调用都带上 `fileId`** |
 | `create_design` 报 unknown tool | 你连的是 A 或 C，切到 B |
 | `html_to_ardot` 报 unknown tool | 你连的是 B 或 C，切到 A |
-| 工具数不对 | 连错端口。A=21，B=20 |
+| 工具数不对 | 连错端口。A=22，B=20 |
 
 ```bash
 curl http://127.0.0.1:50501/api/v1/health    # A

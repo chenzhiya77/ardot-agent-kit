@@ -13,7 +13,7 @@
 <text x="40" y="77" font-size="12" fill="#5F5E5A" dominant-baseline="central">对话前</text>
 <rect x="170" y="54" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
 <text x="284" y="70" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">.mcp.json 自动连接</text>
-<text x="284" y="88" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">50501 · 21 工具进入工具列表</text>
+<text x="284" y="88" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">50501 · 22 工具进入工具列表</text>
 <rect x="412" y="54" width="228" height="46" rx="8" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"/>
 <text x="526" y="70" font-size="14" font-weight="500" fill="#0C447C" text-anchor="middle" dominant-baseline="central">6 条 description 常驻</text>
 <text x="526" y="88" font-size="12" fill="#185FA5" text-anchor="middle" dominant-baseline="central">约 1063 token，注册 3 个 hook</text>

@@ -6,6 +6,10 @@
 # 当 JSON 解析 —— 打纯文本会触发 "Stdout pollution" 解析错误，整条提示就丢了。
 # 走 hookSpecificOutput.additionalContext 是两家的正式契约。
 # 消息里不要出现双引号和反斜杠，否则得转义。
+#
+# 判定按「哪条通路真有打开的文件」，不按「哪个端口先响应」：Ardot 客户端可以在
+# 没开任何文件的状态下正常应答 health（adapters=0），此时若短路就会把「请先打开
+# 文件」塞给一个本来完全可用的 WorkBuddy 通路，甚至让它去切到自己正在用的那条。
 
 set -uo pipefail
 
@@ -23,19 +27,47 @@ adapters_of() {
     | grep -o '[0-9]*$' | head -1
 }
 
-for port in "$PRIMARY_PORT" "$FALLBACK_PORT"; do
-  h=$(health "$port")
-  if [ -n "$h" ]; then
-    n=$(adapters_of "$h")
-    src="Ardot 客户端"
-    [ "$port" = "$FALLBACK_PORT" ] && src="WorkBuddy"
-    if [ "${n:-0}" -gt 0 ]; then
-      emit "ardot: 画布服务已就绪（${src}，端口 ${port}，${n} 个设计文件已打开）。可以直接使用画布工具。"
-    else
-      emit "ardot: 画布服务在运行（${src}，端口 ${port}），但当前没有打开任何设计文件（adapters=0）。画布工具会报 NO_ADAPTER。请先在 ${src} 里打开一个设计文件；若要从零新建，需改用 WorkBuddy 通道（端口 ${FALLBACK_PORT}，提供 create_design）。"
-    fi
-    exit 0
+HA=$(health "$PRIMARY_PORT")
+HB=$(health "$FALLBACK_PORT")
+# *_RAW 保留「字段有没有出现」这个信息：0 和「没有这个字段」不是一回事
+NA_RAW=$(adapters_of "$HA"); NA=${NA_RAW:-0}
+NB_RAW=$(adapters_of "$HB"); NB=${NB_RAW:-0}
+
+if [ "$NA" -gt 0 ]; then
+  MSG="ardot: 画布服务已就绪（Ardot 客户端，端口 ${PRIMARY_PORT}，${NA} 个设计文件已打开）。可以直接使用画布工具。"
+  if [ "$NB" -gt 0 ]; then
+    MSG="${MSG} 另外 WorkBuddy（端口 ${FALLBACK_PORT}）也开着 ${NB} 个文件：两条通路工具集不同，按用途选，见 skills/PORT-NOTES.md。"
   fi
-done
+  emit "$MSG"
+  exit 0
+fi
+
+if [ "$NB" -gt 0 ]; then
+  emit "ardot: 画布服务已就绪（WorkBuddy，端口 ${FALLBACK_PORT}，${NB} 个设计文件已打开）。可以直接使用画布工具；本通路独有 create_design，可以从零新建文件。注意 fetch_guidelines / html_to_ardot / export_variables 只有 Ardot 客户端（端口 ${PRIMARY_PORT}）提供。"
+  exit 0
+fi
+
+# B 的 health 是否带 adapters 字段**未实测确认**（B 通路当时没运行）。
+# 缺这个字段时不能推断成「没打开文件」—— 那会对一个可能完全可用的通路发错指令，
+# 所以下面单独走一条「可用但文件数未知」的兜底分支，顺序在两个 adapters>0 分支之后。
+if [ -n "$HB" ] && [ -z "$NB_RAW" ]; then
+  emit "ardot: 画布服务在运行（WorkBuddy，端口 ${FALLBACK_PORT}）。它的 health 响应里没有 adapters 字段，无法确认打开了几个文件，先按可用处理：若画布工具报 NO_ADAPTER，就是还没有打开设计文件。本通路独有 create_design，可以从零新建文件。"
+  exit 0
+fi
+
+if [ -n "$HA" ] && [ -n "$HB" ]; then
+  emit "ardot: 画布服务在运行（Ardot 客户端 ${PRIMARY_PORT}、WorkBuddy ${FALLBACK_PORT}），但两边都没有打开设计文件（adapters=0），画布工具会报 NO_ADAPTER。请先在其中一个里打开设计文件；要从零新建文件只有 WorkBuddy 的 create_design 能做。"
+  exit 0
+fi
+
+if [ -n "$HA" ]; then
+  emit "ardot: 画布服务在运行（Ardot 客户端，端口 ${PRIMARY_PORT}），但当前没有打开任何设计文件（adapters=0）。画布工具会报 NO_ADAPTER。请先在 Ardot 客户端里打开一个设计文件；若要从零新建，需改用 WorkBuddy 通道（端口 ${FALLBACK_PORT}，提供 create_design）。"
+  exit 0
+fi
+
+if [ -n "$HB" ]; then
+  emit "ardot: 画布服务在运行（WorkBuddy，端口 ${FALLBACK_PORT}），但当前没有打开任何设计文件（adapters=0）。画布工具会报 NO_ADAPTER。请在 WorkBuddy 里打开一个设计文件，或用 create_design 从零新建。"
+  exit 0
+fi
 
 emit "ardot: 画布服务未运行（端口 ${PRIMARY_PORT} 与 ${FALLBACK_PORT} 均无响应）。此时调用任何画布工具都会失败。请先启动 Ardot 客户端并打开设计文件；或启动 WorkBuddy。确认服务起来后提醒用户重开会话。"

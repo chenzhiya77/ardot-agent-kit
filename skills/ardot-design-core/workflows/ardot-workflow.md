@@ -29,6 +29,7 @@ Step 1 — read existing state (skipped only for a brand-new empty file):
   # Opened existing file: call the following (parallel, single message):
   #   fetch_editor_state(includeSchema: false)
   #   fetch_variables
+  #   fetch_styles        ← only when the task must match existing paints / fonts / effects
 
 Step 2: Creative vs. Compositional → creative (new landing page) → continue to Step 3.
 
@@ -108,7 +109,8 @@ Step 4: capture_screenshot → verify the global changes            [T3]
 Step 0: [PORTED] Confirm the target file from the user's link (no create/open tool on channel A);
         skip only if you already verified the file this turn
 Step 1: fetch_editor_state(includeSchema: false) → check current state
-Step 2: fetch_variables → inspect existing variables
+Step 2: fetch_variables + fetch_styles → inspect BOTH existing stores: variables and local
+        shared styles (FILL / TEXT / EFFECT). They are separate — neither call covers the other
 Step 3: apply_variables → create or update variable sets with Light/Dark modes
 Step 4: batch_read(patterns: [{reusable: true}]) → find components to bind variables to
 Step 5: batch_edit → bind variable references to component properties   [T2]

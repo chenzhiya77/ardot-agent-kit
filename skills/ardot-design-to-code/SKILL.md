@@ -47,6 +47,12 @@ Domain workflows for **design → frontend code** conversion and **website → s
 **优先 `export_variables`** 直接拿到结构化 token（含 W3C Design Tokens 格式）。
 比 `fetch_variables` 更适合消费——它给的是能直接喂给样式系统的格式。
 
+⚠️ 变量不是唯一的取值来源：**本地共享样式（FILL 填充 / TEXT 字族字号行高字距 / EFFECT）
+是另一套存储**，`export_variables` 与 `fetch_variables` 都不覆盖，要用 `fetch_styles`。
+工具描述推荐的 `search_styles` 未对外暴露（见 `PORT-NOTES.md`），所以**列模式
+（省略 `styleIds`）是唯一入口**；单次最多回读 50 个 id，未知 id 会被跳过
+（列模式返回的 id 能否直接喂回 `styleIds` 尚未实测 —— 实测过的文件都没有共享样式）。
+
 ## Implementation Guidelines (load alongside a design-type guideline when generating code)
 
 - `{SKILL_ROOT}/references/guidelines-code.md` — design-to-code implementation rules.

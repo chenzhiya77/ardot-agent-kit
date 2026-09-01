@@ -43,7 +43,7 @@ Your `globals.css` should follow this structure:
 
 ### Guidelines
 
-- Read design variables using `fetch_variables`
+- Read design variables using `fetch_variables` — and `fetch_styles` (list mode) for values that live in local shared FILL / EFFECT paints instead of variables
 - Convert to CSS custom properties in `:root` block for single values only (colors, numbers, keywords)
 - Map all design variables using exact names from design file
 - **IMPORTANT**: Use `:root` block for design variables (NOT `@theme` - Tailwind v4's `@theme` only supports custom properties and `@keyframes`)
@@ -99,7 +99,7 @@ When using `next/font/google` or `next/font/local`:
 
 ### Implementation Workflow
 
-1. Read font names from design using `fetch_variables`
+1. Read font names from design using `fetch_variables`, plus `fetch_styles` in list mode with `styleTypes` set to TEXT — TEXT shared styles are where `fontFamily` / `fontSize` / `lineHeight` / `letterSpacing` usually live
 2. Load fonts via `<link>` tags OR Next.js font loaders in layout.tsx
 3. Create utility classes in `@layer base` (`.font-primary`, `.font-secondary`)
 4. Use classes in components: `className="font-primary"`

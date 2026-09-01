@@ -49,7 +49,7 @@ Then add sections into the page container in a separate batch_edit tool call, ex
 
 ```javascript
 hero=I("d920d", {type: "frame", name: "Hero", layout: "vertical", width: "fill_container", height:"hug_contents", padding: [80, 120], gap: 32})
-G(hero, "ai", "modern team collaboration workspace")
+G(hero, "placeholder", "Hero image")
 U(hero, {fill: "#000000AA"})
 heroHeadline=I(hero, {type: "text", content: "Transform Your Workflow", fontSize: 64, fontWeight: "700", fill: "#FFFFFF"})
 heroSubline=I(hero, {type: "text", content: "The all-in-one platform that helps teams ship faster", fontSize: 24, fill: "#A0A0A0"})
@@ -169,7 +169,7 @@ Typography: Choose fonts that are beautiful, unique, and interesting. Opt into d
 Color & Theme: Commit to a cohesive aesthetic. Reuse elements (fonts, paddings, etc.) for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
 Spatial Composition: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
 Backgrounds & Visual Details: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
-Photography: If photography is needed, look for "images" folder. If there is none, use `batch_edit` with the image (G) operation to search for existing stock photos from services like Unsplash or to create AI-generated images if you consider it appropriate. For stock images, write descriptive search queries that capture subject, style, mood, and composition. For generated images, write precise prompts. Do not assume or hallucinate images. If no photos are needed, rely on UI, gradients, or illustration.
+Photography: If photography is needed, look for an "images" folder holding real asset files. If there is none, put a placeholder in that slot — `G(node, "placeholder", "short label")`, a gray box: channel A searches no stock library and generates no image. A real photo has to arrive as a file and go in through `upload_images`. List the placeholder slots in your reply so the user knows what to drop in. Do not assume or hallucinate images. If no photos are needed, rely on UI, gradients, or illustration.
 
 Imagery Intent Hierarchy (prioritize in this order):
 1. Transformation imagery (highest impact): Show people in the after state—the emotion, the outcome, the identity achieved. The product may be absent or peripheral. This is the most powerful because viewers project themselves into the result.
@@ -179,12 +179,14 @@ Imagery Intent Hierarchy (prioritize in this order):
 
 Think of every image as a scene from the visitor's future life. You are casting them as the protagonist. The product is a prop. Ask: What is the person feeling in this image? What just happened, or is about to happen? Would the visitor look at this and think "I want to feel that way"?
 
-Image sourcing: Use `batch_edit` with the image (G) operation to search for existing stock photos from services like Unsplash or to create AI-generated photos, illustrations, or brand assets. Choose based on whether you need authentic real-world photography (stock) or custom-generated visuals (AI generation).
+Image sourcing: channel A searches no stock library and generates no image — `G()` is placeholder-only. Two real paths, nothing in between:
 
-For stock images: Write descriptive search queries that combine multiple terms to capture subject, style, mood, and composition. More specific queries yield better matches.
-- Example queries: "modern office workspace bright", "mountain landscape sunset", "abstract gradient blue purple", "minimalist laptop desk"
+- **Placeholder (default when there is no asset file):** `G(node, "placeholder", "Hero image")` — a gray box whose label is short (≤ 20 chars) and in the design's language. List the placeholder slots in your reply.
+- **Real image:** obtain an actual file first (the project's `images/` folder, a path the user gives you, or one you generated outside the canvas), then `upload_images` to set it as the node's IMAGE fill. `register_assets` covers other asset binaries through its upload/download URL pair.
 
-For generated images: Write prompts that describe the feeling and human state, not just the object.
+Never invent an image URL, and never present a placeholder as real imagery.
+
+Choosing the real image still matters — describe the feeling and human state, not just the object.
 - Weak: "A laptop on a desk"
 - Better: "A person typing on a laptop"
 - Strongest: "A person leaning back from their laptop, eyes closed, slight smile, moment of satisfaction after completing something meaningful"
@@ -247,7 +249,7 @@ The hero compresses the entire product into one screen. If the visitor only sees
 
 **Visual Role**: The hero must work without visuals. Visuals support, not explain.
 
-**AI Images Rule**: Do not use AI-generated images as background fills with text placed on top. Always place AI-generated images in their own dedicated container/frame, separate from text content. Text and images should be siblings in the layout, not layered.
+**Real-image Rule**: Do not use photographic imagery as a background fill with text placed on top. Put real images in their own dedicated container/frame, separate from text content. Text and images should be siblings in the layout, not layered.
 
 **Cognitive Limit**: The hero contains only headline, subheadline, CTAs, one visual, and optional light credibility signal. Everything else goes below the fold.
 
