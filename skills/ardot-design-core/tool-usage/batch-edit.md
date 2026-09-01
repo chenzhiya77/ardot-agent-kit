@@ -124,30 +124,31 @@ Definition: D(nodeId: string)
 - Delete a node from a .ardot file.
 - "nodeId": The ID of the node to delete. ALWAYS use a valid node id, NOT a path or binding.
 
-### Generate/Get Stock Image (G)
+### Placeholder Image (G)
 
-Definition: G(nodeId: string, type: "ai" | "stock", prompt: string)
+Definition: G(nodeId: string, type: "placeholder", prompt: string)
 
 - IMPORTANT: There is NO "image" node type! Images are applied as FILLS to frame/rectangle nodes.
-- Do not generate random URLs for image fills, always use the G operation to get an image from a stock or AI service.
-- To display an image: first Insert a frame or rectangle, then use G to apply the image as a fill.
-- "nodeId": The ID of the frame/rectangle node to apply the image fill to. Can be a valid node ID or a binding name (e.g., "myFrame") created earlier in this operation list.
-- "type": Either "ai" for AI-generated images or "stock" for random photos from Unsplash.
-- "prompt": The text prompt describing the image to generate (for "ai" type) image, when "stock" type is ignored.
+- `G()` is placeholder-only — it applies a gray placeholder box with the label from `prompt`, no real image asset. Do not invent random URLs or IMAGE fills.
+- To show a labeled gray box: first Insert a frame or rectangle, then G to apply the placeholder fill.
+- "nodeId": The ID of the frame/rectangle node to apply the fill to. Can be a valid node ID or a binding name (e.g., "myFrame") created earlier in this operation list.
+- "type": must be "placeholder".
+- "prompt": a SHORT label shown on the placeholder (≤ 20 chars, ~2–4 words, e.g. "Hero image" / "封面图"), in the same language as the user. NOT a full AI prompt — long text overflows and looks broken.
+
+> 🔧 **KIT NOTE.** 上游（WorkBuddy 通路 B）旧版此处为 `type: "ai" | "stock"`；通路 A 实测（2026-09-01）只接受 `"placeholder"`。以工具自身 schema 为准。
 
 Examples:
-- First create a frame, then apply an random image:
-- **IMPORTANT:** use the `stock` type will apply a random image to the frame, the `prompt` parameter is ignored.
+- Labeled placeholder on a new frame:
 
 ``` javascript
 heroImg=I("parentId", {type: "frame", name: "Hero Image", width: 400, height: 300})
-G(heroImg, "stock", "")
+G(heroImg, "placeholder", "Hero image")
 ```
 
-- AI-generated image on existing node:
+- Placeholder on an existing node (label in the user's language):
 
 ``` javascript
-G("logo-frame", "ai", "minimalist coffee shop logo, flat design")
+G("logo-frame", "placeholder", "用户头像")
 ```
 
 ### Examples
@@ -293,7 +294,7 @@ Do NOT guess font style names — always use the exact strings from `get_availab
 
 ### Alignment property reference
 
-For frames with `layout: "horizontal"` or `layout: "vertical"`:
+For frames with `layout: "horizontal"`, `layout: "vertical"` or `layout: "wrap"`:
 
 | Purpose | Property | Valid Values |
 |---|---|---|

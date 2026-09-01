@@ -172,7 +172,7 @@ These rules are enforced throughout Phase 2-5. References to "Rule 1/2/3" in lat
 > Before calling these tools, load their usage guides from the **ardot-design-core** skill: `../../ardot-design-core/tool-usage/search-style-guide.md` and `../../ardot-design-core/tool-usage/build-style-guide.md`.
 > （同样：本文件在 `workflows/` 里，用 `../../`；从 `SKILL.md` 出发才是 `../`。）
 
-1. Call `search_style_guide` with `topic: "slides"` and keywords extracted from the deck's topic and tone.  
+1. Call `search_style_guide` with `styleKeywords` (required, English-only — from the deck's subject and tone), plus optional `colorKeywords` / `typographyKeywords` / `layoutKeywords`.
    🔧 *port note:* 若还没确认过目标文件，可在本批里并行发一次 `fetch_file_info`；通路 A 没有 `create_design` 分支，无需延后等待异步加载。
 2. Review the returned candidates, select best fit per domain
 3. Call `build_style_guide` with your selections to get the complete design system

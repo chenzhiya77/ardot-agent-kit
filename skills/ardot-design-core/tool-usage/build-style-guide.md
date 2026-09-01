@@ -9,7 +9,7 @@ Usage:
 - Consider SKIPPING only when the task is purely compositional (e.g., "add a button here") with an existing design system
 - Call this AFTER reviewing candidates from "search_style_guide"
 - ONLY use index or name received from the earlier "search_style_guide" call
-- Provide your selection for each domain (style, color, typography, layout) using either the index or name
+- Provide your selection for each domain (style, color, typography, layout, scene, composition) using either the index or name
 - Returns a complete design system markdown with colors, typography, spacing, etc.
 
 ## Selection Rules

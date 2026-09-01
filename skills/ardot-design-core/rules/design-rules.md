@@ -336,7 +336,7 @@ badText=I(badRow, {type: "text", content: "John"})
 
 - NO `image` node type. Images are **fills** on frame/rectangle nodes.
 - Use `G()` for images — never generate random URLs.
-- Prefer `"stock"` over `"ai"` type.
+- `G()` is placeholder-only on channel A: `type: "placeholder"` + short label (≤ 20 chars, user's language) — see `tool-usage/batch-edit.md` → G.
 - Pattern: Insert frame → apply G() as fill.
 - When G() is unavailable, use `GRADIENT_LINEAR` fills as placeholders with different color schemes per section.
 

@@ -35,11 +35,11 @@ Step 2: Creative vs. Compositional → creative (new landing page) → continue 
 Step 3: Load references/guidelines-landing-page.md → learn landing page design rules
         (Local file reads — no MCP calls.)
 
-Step 4: search_style_guide(topic: "landing-page", designKeywords: "modern minimal website", colorKeywords: "...", typographyKeywords: "...", layoutKeywords: "...")
-        (Single call — review the returned candidates, then proceed to Step 5.)
+Step 4: search_style_guide(styleKeywords: "modern minimal website", colorKeywords: "...", typographyKeywords: "...", layoutKeywords: "...")
+        (Single call — styleKeywords is required, English-only; review the returned candidates, then proceed to Step 5.)
 
 Step 5: Review search_style_guide candidates → select best fit per domain
-  build_style_guide(selections: { style: "...", color: 3, typography: "...", layout: "..." })
+  build_style_guide(style: "...", color: 3, typography: "...", layout: "...")   ← 平铺顶层参数,各域传 index(数字)或 name(字符串)
   → receive complete design system
 
 Step 6 (parallel, single message):

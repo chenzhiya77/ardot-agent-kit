@@ -163,9 +163,9 @@ Load the **domain guideline(s)** from the paired domain skill that goes with thi
 
 **Before calling, load `{SKILL_ROOT}/tool-usage/search-style-guide.md`** — it covers the English-only keyword requirement and the per-domain selection protocol.
 
-Call **`search_style_guide`** once. Pass the `topic` matching the guideline loaded in Step 3 (e.g. `landing-page`, `web-app`, `mobile-app`, `slides`). Extract keywords from the user's request for each domain. Be generous — more relevant keywords lead to better search coverage. Refer to the tool's input schema for what each parameter should contain. Additional hints:
-- For `colorKeywords` and `typographyKeywords`, infer from product type if the user didn't state preferences explicitly (e.g., spa → warm/calm/serene; luxury brand → elegant/serif)
-- Pass `true` to get the full catalog for any domain if no relevant keywords can be extracted
+Call **`search_style_guide`** once. **`styleKeywords` is required** and must be English-only (the catalog rejects non-ASCII) — build it from deliverable type + industry + visual style names (e.g. `"fitness app dashboard modern data-dense"`). Optionally add `colorKeywords` / `typographyKeywords` / `layoutKeywords` / `sceneKeywords` / `compositionKeywords`; each optional param falls back to `styleKeywords` when omitted, and `domain` limits the search to a single domain. Extract keywords from the user's request for each domain. Be generous — more relevant keywords lead to better search coverage. The tool's own input schema is authoritative — if a parameter is rejected, follow the schema. Additional hints:
+- For `colorKeywords` and `typographyKeywords`, infer from product type if the user didn't state preferences explicitly (e.g., spa → warm/calm/serif; luxury brand → elegant/serif)
+- Pass `true` as `styleKeywords` to get the full catalog if no relevant keywords can be extracted
 
 Review the returned candidates, then proceed to Step 5.
 

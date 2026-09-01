@@ -4,7 +4,7 @@
 - When `replace` is true, variable sets and variables NOT present in the input will be **deleted**. Use with caution.
 
 ## Input Format
-`variables` is a map of **variable set name** \u2192 **definition**:
+`variables` is a map of **variable set name** → **definition**:
 > **Naming restriction**: Variable set names and variable names must NOT contain `$` or `:` characters, as these are reserved for the variable reference syntax `$:<SetName>:<VariableName>` used in `batch_edit`.
 
 ```json
@@ -28,7 +28,7 @@
 - **type**: `"BOOLEAN"`, `"FLOAT"`, `"STRING"`, or `"COLOR"`.
 - **valuesByMode**: Values keyed by mode name. Or use `"value"` to set the same value for all modes.
 - **scopes** (optional): `"ALL_SCOPES"`, `"TEXT_CONTENT"`, `"CORNER_RADIUS"`, `"WIDTH_HEIGHT"`, `"GAP"`, `"ALL_FILLS"`, `"FRAME_FILL"`, `"SHAPE_FILL"`, `"TEXT_FILL"`, `"STROKE"`, `"STROKE_FLOAT"`, `"EFFECT_FLOAT"`, `"EFFECT_COLOR"`, `"OPACITY"`, `"FONT_STYLE"`, `"FONT_FAMILY"`, `"FONT_SIZE"`, `"LINE_HEIGHT"`, `"LETTER_SPACING"`, `"PARAGRAPH_SPACING"`, `"PARAGRAPH_INDENT"`, `"FONT_VARIATIONS"`
-**Value formats**: BOOLEAN \u2192 `true/false`, FLOAT \u2192 number, STRING \u2192 string, COLOR \u2192 `{"r": 0~1, "g": 0~1, "b": 0~1, "a": 0~1}` (NOT hex strings).
+**Value formats**: BOOLEAN → `true/false`, FLOAT → number, STRING → string, COLOR → `{"r": 0~1, "g": 0~1, "b": 0~1, "a": 0~1}` (NOT hex strings).
 
 ## Example
 ```json
