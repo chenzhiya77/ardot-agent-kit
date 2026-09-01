@@ -39,8 +39,10 @@ if [ -z "$FILE_ID" ]; then
     -H "Content-Type: application/json" \
     -H "Accept: application/json, text/event-stream" \
     -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"fetch_file_info","arguments":{}}}' 2>/dev/null)
-  FILE_ID=$(printf '%s' "$RESP" | grep -o 'https://ardot.tencent.com/file/[0-9]*' | head -1)
-  [ -n "$FILE_ID" ] && FILE_ID="${FILE_ID##*/}"
+  # 通路 A 响应是 SSE 流且 fileUrl 用 cocraft:// scheme —— 优先抓 fileId 字段,
+  # 抓不到再退回任意 file/<数字> 形态(两种 scheme 都能命中)。
+  FILE_ID=$(printf '%s' "$RESP" | grep -oE '"fileId"[[:space:]]*:[[:space:]]*"?[0-9]+' | head -1 | grep -oE '[0-9]+$')
+  [ -z "$FILE_ID" ] && FILE_ID=$(printf '%s' "$RESP" | grep -oE 'file/[0-9]+' | head -1 | grep -oE '[0-9]+$')
 fi
 
 FILE_ID="${FILE_ID##*/}"
