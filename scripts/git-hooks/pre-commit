@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# 提交前跑一遍技能包自检。安装方式见 README「维护」一节：
+#   cp scripts/git-hooks/pre-commit .git/hooks/pre-commit
+# 钩子留在仓库里当版本化的源文件、由各自 clone 安装，是因为 .git/hooks 不进版本控制，
+# 而把钩子塞进插件 ZIP 会变成一个不该有的装机副作用。
+#
+# 只跑离线快照模式，绝不跑 --live —— 否则提交就依赖 Ardot 客户端是否开着，
+# 客户端一关你就提交不了任何东西。
+
+set -uo pipefail
+
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+PY=python
+command -v python >/dev/null 2>&1 || PY=python3
+if ! command -v "$PY" >/dev/null 2>&1; then
+  echo "pre-commit: 找不到 python，自检没跑。请手动执行 python scripts/check-refs.py" >&2
+  exit 1
+fi
+
+"$PY" scripts/check-refs.py -q || {
+  echo "pre-commit: 技能包自检未通过，已阻止提交。" >&2
+  exit 1
+}
+
+# 这几个脚本坏在语法上不会报错给任何人看 —— 宿主只会当作钩子没输出，
+# 会话开局静默失聪，所以顺手查一遍。
+for f in bin/check-ardot bin/check-skill-loaded bin/reset-skill-hint bin/open-canvas; do
+  [ -f "$f" ] || continue
+  bash -n "$f" || {
+    echo "pre-commit: $f 语法错误，已阻止提交。" >&2
+    exit 1
+  }
+done
+
+exit 0
