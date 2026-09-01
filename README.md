@@ -116,6 +116,17 @@ qoder plugins install /path/to/ardot-agent-kit
 装完执行 `/plugins reload` 生效。hooks 变量已做双宿主兼容：
 `QODER_PLUGIN_ROOT` / `CLAUDE_PLUGIN_ROOT` 哪个存在用哪个，无需分叉维护。
 
+### ZCode
+
+同一目录直接可用（ZCode 认 `.claude-plugin/` 清单；`skills/`、`hooks/hooks.json`、
+`.mcp.json` 三个组件位置均有默认发现逻辑，清单无需声明组件字段）。
+安装：**Discover 页 → `+` → 本地目录**。装完确认三处：
+
+- **Settings → Skills**：6 个 ardot 技能在列
+- **插件详情页**：SessionStart / PreToolUse 两个 hook 为 runnable；
+  PostCompact 显示 unsupported 警告属预期（ZCode 只支持 7 个事件，没有 PostCompact）
+- **Settings → MCP**：`ardot-desktop` 自动连上（21 个工具）
+
 > ⚠️ 装插件**前**记得移除用户级的 ardot MCP，否则工具名会重复：
 > `claude mcp remove ardot-desktop --scope user`
 
@@ -211,7 +222,7 @@ claude mcp add ardot-local --transport http http://127.0.0.1:50551/api/v1/mcp --
 
 ## 迁移到其他 agent
 
-**插件主体两家 agent 都认**（2026-08-29 对照 Qoder 官方插件文档核实），
+**插件主体三家 agent 都认**（Qoder 于 2026-08-29、ZCode 于 2026-09-01 对照官方文档与运行时源码核实），
 只有清单文件名各家不同，放两份即可：
 
 | 零件 | Claude Code | Qoder |
@@ -239,6 +250,7 @@ claude mcp add ardot-local --transport http http://127.0.0.1:50551/api/v1/mcp --
 | 宿主 | `SessionStart` | `PreToolUse` | `PostCompact` | 依据 |
 |---|---|---|---|---|
 | **Claude Code** | ✅ | ✅ | ✅ | 原生支持，`.claude-plugin` 下的 `hooks/hooks.json` |
+| **ZCode** | ✅ | ✅ | ❌ 不在 7 个支持事件内，加载时仅警告跳过 | 官方 `diagnosing-hooks` 文档 + `zcode.cjs` 源码核实 |
 | **Qoder** | ✅ | ✅ | ✅ | 2026-08-29 核实：官方 hook 文档 + 运行时 `qoder-worker-runtime.obf.mjs`，三个事件都在事件表里 |
 | **Cursor** | ❌ | ❌ | ❌ | 只有 `.cursor/rules/*.mdc`，没有生命周期 hook |
 | **Codex** | ❌ | ❌ | ❌ | 只认 `AGENTS.md`，已停止支持 |
