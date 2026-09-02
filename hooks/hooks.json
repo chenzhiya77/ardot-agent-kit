@@ -7,6 +7,7 @@
           {
             "type": "command",
             "command": "if [ -n \"${QODER_PLUGIN_ROOT}\" ]; then \"${QODER_PLUGIN_ROOT}/bin/check-ardot\"; elif [ -n \"${CLAUDE_PLUGIN_ROOT}\" ]; then \"${CLAUDE_PLUGIN_ROOT}/bin/check-ardot\"; fi",
+            "shell": "D:/appdevelop/git/Git/bin/bash.exe",
             "timeout": 10
           }
         ]
@@ -19,6 +20,7 @@
           {
             "type": "command",
             "command": "if [ -n \"${QODER_PLUGIN_ROOT}\" ]; then \"${QODER_PLUGIN_ROOT}/bin/check-skill-loaded\"; elif [ -n \"${CLAUDE_PLUGIN_ROOT}\" ]; then \"${CLAUDE_PLUGIN_ROOT}/bin/check-skill-loaded\"; fi",
+            "shell": "D:/appdevelop/git/Git/bin/bash.exe",
             "timeout": 5
           }
         ]
@@ -31,6 +33,7 @@
           {
             "type": "command",
             "command": "if [ -n \"${QODER_PLUGIN_ROOT}\" ]; then \"${QODER_PLUGIN_ROOT}/bin/reset-skill-hint\"; elif [ -n \"${CLAUDE_PLUGIN_ROOT}\" ]; then \"${CLAUDE_PLUGIN_ROOT}/bin/reset-skill-hint\"; fi",
+            "shell": "D:/appdevelop/git/Git/bin/bash.exe",
             "timeout": 5
           }
         ]

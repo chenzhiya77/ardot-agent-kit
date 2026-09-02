@@ -1,5 +1,6 @@
 # 分发 ZIP 的应打包清单 —— scripts/package.py 用它校验，不读 git 跟踪清单。
 # 有意增删技能文件后：python scripts/package.py --write-manifest
+.claude-plugin/marketplace.json
 .claude-plugin/plugin.json
 .gitignore
 .mcp.json
@@ -14,7 +15,10 @@ hooks/hooks.json
 install.sh
 scripts/check-refs.py
 scripts/detect-ardot.sh
+scripts/git-hooks/pre-commit
 scripts/open-canvas.sh
+scripts/package-manifest.txt
+scripts/package.py
 skills/PORT-NOTES.md
 skills/ardot-design-core/SKILL.md
 skills/ardot-design-core/references/ardot-schema.md

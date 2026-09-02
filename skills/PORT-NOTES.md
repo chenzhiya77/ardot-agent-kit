@@ -246,6 +246,20 @@ B 要手动加，见 README「三条 MCP 通路」。**别假设两条都在手�
 > 只是参数描述里的承诺，**尚未实测**。下次客户端里开了 2 个以上文件时补测：
 > `fetch_file_info` 不传参数，看是返回列表还是报错。
 
+## Windows ZCode 的 hook shell 字段（2026-09-02 落地）
+
+三条 hook 都带了 `"shell": "D:/appdevelop/git/Git/bin/bash.exe"`。背景与规则：
+
+- **为什么需要**：ZCode 在 Windows 上用 `%ComSpec%`（cmd.exe）执行 command hook——
+  它不带 `shellProfile:"posix-bash"` 就到不了自己的 git-bash 提供方（`zcode.cjs` 的
+  `cpe`/`LMn` 核实），POSIX 一行式进 cmd 必败。`shell` 字符串会被直接采信为 spawn
+  shell，一个字段强制走 bash。
+- **必须绝对路径**：裸 `bash` 走 PATH 解析，会撞上 `System32\bash.exe`（WSL stub）——
+  那时 `${CLAUDE_PLUGIN_ROOT}` 已被展开成 `C:\...`，WSL bash 解析不了，hook 静默死。
+- ⚠️ **换机器必改这一行**（钉死了本机 Git 安装位置 `D:/appdevelop/git/Git`）。
+- 容忍度实测：Qoder ✅（未知键不丢 hook，注入 + 提醒双证）；ZCode ✅（注入 + hook
+  注册记录双证）；Claude Code 未实测（本机未装 Claude 版插件）。
+
 ## 排障
 
 | 现象 | 原因 / 处理 |

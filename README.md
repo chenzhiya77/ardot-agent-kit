@@ -124,20 +124,21 @@ qoder plugins install /path/to/ardot-agent-kit
 
 - **Settings → Skills**：6 个 ardot 技能在列
 - **插件详情页**：SessionStart / PreToolUse 两个 hook 为 runnable；
-  PostCompact 显示 unsupported 警告属预期（ZCode 只支持 7 个事件，没有 PostCompact）。
-  ⚠️ 但 **runnable 不等于跑得动** —— 见下面那条 Windows 不兼容
+  PostCompact 显示 unsupported 警告属预期（ZCode 只支持 7 个事件，没有 PostCompact）
 - **Settings → MCP**：`ardot-desktop` 自动连上（22 个工具）
 
 > ⚠️ 装插件**前**记得移除用户级的 ardot MCP，否则工具名会重复：
 > `claude mcp remove ardot-desktop --scope user`
 
-> 🔴 **已知不兼容（Windows）**：ZCode 用 `%ComSpec%`（cmd.exe）执行 command hook ——
-> `zcode.cjs` 的 `resolveShell` 核实过，且 hook 条目没带 `shellProfile:"posix-bash"`。
-> 而本插件三个 hook 的命令行都是 POSIX 一行式（`if [ -n "${QODER_PLUGIN_ROOT}" ]; then …; fi`），
-> 放进 cmd.exe 实测 `exit=1`。**所以在 Windows 的 ZCode 上三道闸都不会生效**，
-> 「事件支持」只说明宿主会去调它。修法未定：要么按宿主拆一套 cmd 写法的 command，
-> 要么改成单条可执行 + `args` 形态绕开 shell。在定下来之前，ZCode 上按
-> 「闸失效后的退化方案」办 —— 把硬规则放进常驻规则。
+> 🟢 **Windows 兼容性已修（2026-09-02）**：ZCode 在 Windows 上用 `%ComSpec%`（cmd.exe）
+> 执行 command hook（`zcode.cjs` 的 `resolveShell` 核实：hook 不带 `shellProfile:"posix-bash"`
+> 就到不了它的 git-bash 提供方），而本插件三个 hook 都是 POSIX 一行式，进 cmd 必败
+> （实测 `exit=1`）。修法：三条 hook 均已加
+> `"shell": "D:/appdevelop/git/Git/bin/bash.exe"`——ZCode 对字符串 shell 直接采信为
+> spawn shell，一个字段强制走 bash。⚠️ **路径钉死了本机 Git 安装位置，换机器必改**；
+> 裸 `bash` 不许用（PATH 上的 System32\bash.exe 是 WSL stub，会静默死）。
+> 实测：ZCode ✅（会话注入 + hook 注册记录双证）、Qoder ✅（注入 + PreToolUse 提醒
+> 双证，未知键被容忍）、Claude Code 未实测（本机未装 Claude 版插件，无现存状态可破坏）。
 
 ---
 
@@ -267,8 +268,9 @@ claude mcp add ardot-local --transport http http://127.0.0.1:50551/api/v1/mcp --
 
 > ⚠️ 表里的 ✅ 只回答「宿主支持这个事件、会去调 command」，不回答「这条 command 跑不跑得起来」。
 > Windows 上的第二问要问一句：这个宿主用 bash 还是 cmd.exe 执行 command hook？
-> Claude Code 与 Qoder 走 bash（本插件的 POSIX 一行式实测有效），ZCode 走 `%ComSpec%`，
-> 于是同一行命令在它那儿 `exit=1` —— 详见上面 ZCode 安装节的红框。
+> Claude Code 与 Qoder 走 bash（本插件的 POSIX 一行式实测有效）；ZCode 走 `%ComSpec%`，
+> 曾因此全军覆没——现已用 hook 条目里的 `"shell": "<bash 绝对路径>"` 修复
+> （见上面 ZCode 安装节的 🟢 说明），Qoder/ZCode 对该字段实测均容忍。
 
 #### Qoder hook 官方文档在哪
 
