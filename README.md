@@ -1,8 +1,6 @@
 # ardot-design —— Claude Code 插件
 
-把 Ardot 画布设计能力接进 Claude Code：读写设计稿、由设计稿出前端代码。
-
-**自用插件，不对外分发** —— 技能内容提取自 WorkBuddy 安装包（腾讯专有内容）。
+把 Ardot 画布设计能力接进 Claude Code：读写设计稿、由设计稿出前端代码, 参考来源--workbuddy。
 
 > 📌 本目录既是**源码目录**也是**插件本体**。
 > 安装方式：整个目录拷到 `~/.claude/skills/ardot-design/`。
